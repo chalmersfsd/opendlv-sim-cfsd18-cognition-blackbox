@@ -18,9 +18,7 @@
 #include "cluon-complete.hpp"
 #include "opendlv-standard-message-set.hpp"
 #include "blackbox.hpp"
-
 #include <Eigen/Dense>
-
 #include <cstdint>
 #include <tuple>
 #include <utility>
@@ -32,17 +30,18 @@ int32_t main(int32_t argc, char **argv) {
   int32_t retCode{0};
   std::map<std::string, std::string> commandlineArguments = cluon::getCommandlineArguments(argc, argv);
   if (commandlineArguments.size()<0) {
-    std::cerr << argv[0] << " is a slam implementation for the CFSD18 project." << std::endl;
+    std::cerr << argv[0] << " is a NEAT driver implementation for the CFSD18 project." << std::endl;
     std::cerr << "Usage:   " << argv[0] << " --cid=<OpenDaVINCI session> [--id=<Identifier in case of simulated units>] [--verbose] [Module specific parameters....]" << std::endl;
-    std::cerr << "Example: " << argv[0] << "--cid=111 --id=120 --detectConeId=118 --estimationId=114 --gatheringTimeMs=10 --sameConeThreshold=1.2 --refLatitude=48.123141 --refLongitude=12.34534 --timeBetweenKeyframes=0.5 --coneMappingThreshold=50 --conesPerPacket=20" <<  std::endl;
+    std::cerr << "Example: " << argv[0] << "--cid=111 --id=120 --maxSteering=25.0 --maxAcceleration=5.0 --maxDeceleration=5.0" <<  std::endl;
     retCode = 1;
   } else {
     uint32_t const ID{(commandlineArguments["id"].size() != 0) ? static_cast<uint32_t>(std::stoi(commandlineArguments["id"])) : 0};
     bool const VERBOSE{commandlineArguments.count("verbose") != 0};
     (void)VERBOSE;
+
     // Interface to a running OpenDaVINCI session (ignoring any incoming Envelopes).
     cluon::data::Envelope data;
-    //std::shared_ptr<Slam> slammer = std::shared_ptr<Slam>(new Slam(10));
+
     BlackBox blackbox(commandlineArguments);
     cluon::OD4Session od4{static_cast<uint16_t>(std::stoi(commandlineArguments["cid"])),
       [&data, &boxer = blackbox, &od4session = od4, senderStamp = ID, &configuration = commandlineArguments](cluon::data::Envelope &&envelope){

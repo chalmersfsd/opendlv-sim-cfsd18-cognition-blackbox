@@ -27,9 +27,6 @@
 #include <iostream>
 #include <thread>
 #include <cmath>
-//#include <odvdcfsd18/GeneratedHeaders_ODVDcfsd18.h>
-//#include <odvdcfsd18/GeneratedHeaders_ODVDcfsd18.h>
-
 #include <iomanip>
 #include <sstream>
 #include <list>
@@ -57,9 +54,8 @@ class BlackBox {
 
   void initializeCollection(int);
   void sortIntoSideArrays(Eigen::MatrixXd, int, int, int, int);
-  void generateSurfaces(Eigen::ArrayXXf, Eigen::ArrayXXf, Eigen::ArrayXXf);
+  void generateSurfaces(Eigen::ArrayXXf, Eigen::ArrayXXf);
   Eigen::MatrixXd Spherical2Cartesian(double, double, double);
-  
 
   cluon::data::TimeStamp m_lastTimeStamp;
   Eigen::MatrixXd m_coneCollector;
@@ -72,12 +68,9 @@ class BlackBox {
   float m_vx;
   float m_vy;
   float m_yawRate;
-  //NEAT::Network* m_net;
   NEAT::Network *m_net;
 
   const double DEG2RAD = 0.017453292522222; // PI/180.0
-
-
 
 };
 
