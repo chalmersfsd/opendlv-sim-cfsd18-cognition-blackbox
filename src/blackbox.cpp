@@ -148,7 +148,7 @@ void BlackBox::nextContainer(cluon::data::Envelope &a_container)
 //    std::cout << "RECIEVED A KINEMATICSTATE!" << std::endl;
     auto kinematicState = cluon::extractMessage<opendlv::sim::KinematicState>(std::move(a_container));
     {
-      std::unique_lock<std::mutex> lockCone(m_stateMutex);
+      std::unique_lock<std::mutex> lockState(m_stateMutex);
       m_vx = kinematicState.vx();
       m_vy = kinematicState.vy();
       m_yawRate = kinematicState.yawRate();
@@ -283,7 +283,7 @@ std::cout << "sideRight: " << sideRight.rows() << std::endl;
 
     in[0] = 1; // Bias
     {
-      std::unique_lock<std::mutex> lockCone(m_stateMutex);
+      std::unique_lock<std::mutex> lockState(m_stateMutex);
       in[1] = static_cast<double>(m_vx);
       in[2] = static_cast<double>(m_vy);
       in[3] = static_cast<double>(m_yawRate);
