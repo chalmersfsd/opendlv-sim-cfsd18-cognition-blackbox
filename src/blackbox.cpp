@@ -25,32 +25,35 @@ BlackBox::BlackBox(std::map<std::string, std::string> commandlineArguments) :
  m_lastTimeStamp()
 , m_coneCollector()
 , m_coneMutex()
+, m_stateMutex()
 , m_newFrame()
 , m_timeDiffMilliseconds()
 , m_lastTypeId()
 , m_surfaceId()
-, m_cid()
+, m_cid{static_cast<uint16_t>(std::stoi(commandlineArguments["cid"]))}
+, m_maxSteering{(commandlineArguments["maxSteering"].size() != 0) ? (static_cast<float>(std::stof(commandlineArguments["maxSteering"]))) : (25.0f)}
+, m_maxAcceleration{(commandlineArguments["maxAcceleration"].size() != 0) ? (static_cast<float>(std::stof(commandlineArguments["maxAcceleration"]))) : (5.0f)}
+, m_maxDeceleration{(commandlineArguments["maxDeceleration"].size() != 0) ? (static_cast<float>(std::stof(commandlineArguments["maxDeceleration"]))) : (5.0f)}
 , m_vx()
 , m_vy()
 , m_yawRate()
 , m_net()
 {
-    m_coneCollector = Eigen::MatrixXd::Zero(4,100);
-    m_newFrame = true;
-    m_timeDiffMilliseconds = 150;
-    m_lastTypeId = -1;
-    m_surfaceId = rand();
-    setUp(commandlineArguments);
+  m_coneCollector = Eigen::MatrixXd::Zero(4,100);
+  m_newFrame = true;
+  m_timeDiffMilliseconds = 150;
+  m_lastTypeId = -1;
+  m_surfaceId = rand();
+  setUp();
 }
 
 BlackBox::~BlackBox()
 {
 }
 
-void BlackBox::setUp(std::map<std::string, std::string> commandlineArguments)
+void BlackBox::setUp()
 {
-  m_cid = static_cast<uint16_t>(std::stoi(commandlineArguments["cid"]));
-
+  std::cout << "Setting up blackbox with maxSteering = " << m_maxSteering << ", maxAcceleration = " << m_maxAcceleration << ", maxDeceleration = " << m_maxDeceleration << std::endl;
   NEAT::Population *pop=0;
   NEAT::Genome *start_genome;
   char curword[20];
@@ -78,6 +81,7 @@ void BlackBox::setUp(std::map<std::string, std::string> commandlineArguments)
     net=org->net;
     m_net = net;
   }
+  std::cout << "Network extracted" << std::endl;
 } // End of setUp
 
 void BlackBox::tearDown()
@@ -143,10 +147,12 @@ void BlackBox::nextContainer(cluon::data::Envelope &a_container)
   else if(a_container.dataType() == opendlv::sim::KinematicState::ID()){
 //    std::cout << "RECIEVED A KINEMATICSTATE!" << std::endl;
     auto kinematicState = cluon::extractMessage<opendlv::sim::KinematicState>(std::move(a_container));
-    // TODO: Mutex
-    m_vx = kinematicState.vx();
-    m_vy = kinematicState.vy();
-    m_yawRate = kinematicState.yawRate();
+    {
+      std::unique_lock<std::mutex> lockCone(m_stateMutex);
+      m_vx = kinematicState.vx();
+      m_vy = kinematicState.vy();
+      m_yawRate = kinematicState.yawRate();
+    }
   }
 
 } // End of nextContainer
@@ -275,11 +281,13 @@ std::cout << "sideRight: " << sideRight.rows() << std::endl;
     double out2; 
     std::vector<NEAT::NNode*>::iterator out_iter;
 
-    // TODO: Mutex
     in[0] = 1; // Bias
-    in[1] = static_cast<double>(m_vx);
-    in[2] = static_cast<double>(m_vy);
-    in[3] = static_cast<double>(m_yawRate);
+    {
+      std::unique_lock<std::mutex> lockCone(m_stateMutex);
+      in[1] = static_cast<double>(m_vx);
+      in[2] = static_cast<double>(m_vy);
+      in[3] = static_cast<double>(m_yawRate);
+    }
     in[4] = leftSide(0,0);
     in[5] = leftSide(0,1);
     in[6] = leftSide(1,0);
@@ -315,10 +323,9 @@ std::cout << "sideRight: " << sideRight.rows() << std::endl;
     }
     std::cout << "OUTS: " << out1*2-1 << " and " << out2*2-1 << std::endl;
 
-    // TODO: Set max values in commandline
-    float maxSteer = 25.0;
-    float maxAcc = 5.0;
-    float maxDec = 5.0;
+    float maxSteer = m_maxSteering;
+    float maxAcc = m_maxAcceleration;
+    float maxDec = m_maxDeceleration;
 
     // Send messages
     cluon::OD4Session od4{m_cid,[](auto){}};

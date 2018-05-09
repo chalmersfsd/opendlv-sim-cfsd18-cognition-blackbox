@@ -49,7 +49,7 @@ class BlackBox {
   virtual void nextContainer(cluon::data::Envelope &);
 
  private:
-  void setUp(std::map<std::string, std::string>);
+  void setUp();
   void tearDown();
 
   void initializeCollection(int);
@@ -60,11 +60,15 @@ class BlackBox {
   cluon::data::TimeStamp m_lastTimeStamp;
   Eigen::MatrixXd m_coneCollector;
   std::mutex m_coneMutex;
+  std::mutex m_stateMutex;
   bool m_newFrame;
   int m_timeDiffMilliseconds;
   int m_lastTypeId;
   int m_surfaceId;
   uint16_t m_cid;
+  float m_maxSteering;
+  float m_maxAcceleration;
+  float m_maxDeceleration;
   float m_vx;
   float m_vy;
   float m_yawRate;
