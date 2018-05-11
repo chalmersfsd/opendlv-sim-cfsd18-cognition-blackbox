@@ -52,27 +52,49 @@ class BlackBox {
   void setUp();
   void tearDown();
 
-  void initializeCollection(int);
+  void initializeCollection();
   void sortIntoSideArrays(Eigen::MatrixXd, int, int, int, int);
   void generateSurfaces(Eigen::ArrayXXf, Eigen::ArrayXXf);
   Eigen::MatrixXd Spherical2Cartesian(double, double, double);
 
-  cluon::data::TimeStamp m_lastTimeStamp;
-  Eigen::MatrixXd m_coneCollector;
-  std::mutex m_coneMutex;
   std::mutex m_stateMutex;
-  bool m_newFrame;
-  int m_timeDiffMilliseconds;
-  int m_lastTypeId;
-  int m_surfaceId;
   uint16_t m_cid;
   float m_maxSteering;
   float m_maxAcceleration;
   float m_maxDeceleration;
+  float m_receiveTimeLimit;
   float m_vx;
   float m_vy;
   float m_yawRate;
   NEAT::Network *m_net;
+  bool m_newFrame;
+  bool m_directionOK;
+  bool m_distanceOK;
+  bool m_runOK;
+  std::map< double, float > m_directionFrame;
+  std::map< double, float > m_distanceFrame;
+  std::map< double, int > m_typeFrame;
+  std::map< double, float > m_directionFrameBuffer;
+  std::map< double, float > m_distanceFrameBuffer;
+  std::map< double, int > m_typeFrameBuffer;
+  int m_lastDirectionId;
+  int m_lastDistanceId;
+  int m_lastTypeId;
+  bool m_newDirectionId;
+  bool m_newDistanceId;
+  bool m_newTypeId;
+  std::chrono::time_point<std::chrono::system_clock> m_directionTimeReceived;
+  std::chrono::time_point<std::chrono::system_clock> m_distanceTimeReceived;
+  std::chrono::time_point<std::chrono::system_clock> m_typeTimeReceived;
+  uint64_t m_nConesInFrame;
+  int m_objectPropertyId;
+  int m_directionId;
+  int m_distanceId;
+  int m_typeId;
+  std::mutex m_directionMutex = {};
+  std::mutex m_distanceMutex = {};
+  std::mutex m_typeMutex = {};
+  int m_surfaceId;
 
   const double DEG2RAD = 0.017453292522222; // PI/180.0
 
